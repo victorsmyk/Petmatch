@@ -110,18 +110,18 @@
     <h2>Registrar pet perdido</h2>
     <p class="section-sub">Preencha as informações abaixo para publicar no feed e acionar a comunidade.</p>
 
-    <form class="form-grid">
+    <form class="form-grid" onsubmit="cadastrar(event)"> <!-- 'Pet cadastrado! Você receberá notificações quando houver novidades.' -->
       <div class="form-card">
         <h3>🐾 Informações do pet</h3>
 
         <div class="form-group">
           <label>Nome do animal</label>
-          <input type="text" id="nomeForm" placeholder="Ex: Thor, Mel, Bolinha...">
+          <input type="text" id="nomeForm" placeholder="Ex: Thor, Mel, Bolinha..." required max="25">
         </div>
 
         <div class="form-group">
           <label>Espécie</label>
-          <select id="especieForm">
+          <select id="especieForm" required>
             <option value="">Selecione</option>
             <option>Cachorro</option>
             <option>Gato</option>
@@ -131,12 +131,12 @@
 
         <div class="form-group">
           <label>Raça</label>
-          <input type="text" id="racaForm" placeholder="Ex: Labrador, SRD...">
+          <input type="text" id="racaForm" placeholder="Ex: Labrador, SRD..." required maxlength="20">
         </div>
 
         <div class="form-group">
           <label>Cor / características</label>
-          <textarea id="caracteristicasForm" placeholder="Descreva cor, porte, marcas especiais, coleira..."></textarea>
+          <textarea id="caracteristicasForm" placeholder="Descreva cor, porte, marcas especiais, coleira..." maxlength="300"></textarea>
         </div>
 
         <div class="form-group">
@@ -153,33 +153,33 @@
 
         <div class="form-group">
           <label>Última localização vista</label>
-          <input type="text" id="ultimaLocalizacaoForm" placeholder="Rua, referência ou CEP">
+          <input type="text" id="ultimaLocalizacaoForm" placeholder="Rua, referência ou CEP" required maxlength="50">
         </div>
 
         <div class="form-group">
           <label>Data em que desapareceu</label>
-          <input type="date" id="ultimaDataForm">
+          <input type="date" id="ultimaDataForm" required>
         </div>
 
         <div class="form-group">
           <label>Detalhes</label>
-          <textarea id="detalhesForm" placeholder="Horário, direção que seguiu, se estava assustado..."></textarea>
+          <textarea id="detalhesForm" placeholder="Horário, direção que seguiu, se estava assustado..." required maxlength="160"></textarea>
         </div>
 
         <div class="form-group">
           <label>Valor da recompensa</label>
           <div class="reward-input">
             <div class="reward-prefix">R$</div>
-            <input type="number" id="recompensaForm" placeholder="0,00" min="0">
+            <input type="number" id="recompensaForm" placeholder="0,00" min="0" required maxlength="9999">
           </div>
         </div>
 
         <div class="form-group">
           <label>Seu contato (WhatsApp)</label>
-          <input type="tel" id="telefoneForm" placeholder="(12) 9 0000-0000">
+          <input type="tel" id="telefoneForm" placeholder="(12) 9 0000-0000" required maxlength="17">
         </div>
 
-        <button class="btn-primary" style="width:100%; margin-top:8px;" type="submit" onclick="cadastrar(event)"> <!-- 'Pet cadastrado! Você receberá notificações quando houver novidades.' -->
+        <button class="btn-primary" style="width:100%; margin-top:8px;" type="submit"> 
           Publicar no feed
         </button>
       </div>

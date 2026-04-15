@@ -162,8 +162,8 @@ function showToast(msg) {
 window.showToast = showToast; // Make it globally accessible
 
 // Function to handle pet registration
-async function cadastrar(e) {
-    e.preventDefault(); // Prevent default form submission
+async function cadastrar(event) {
+    event.preventDefault(); // Prevent default form submission
 
     try {
         let imageUrl = null;
