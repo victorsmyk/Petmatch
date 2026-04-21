@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetMatch — Feed Social</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --white: #ffffff;
+    --border: #dce1e7;
+    --text: #1c1e21;
+    --muted: #65676b;
+    --accent: #1877f2;
+    --accent-light: #e7f0fd;
+    --red: #fa3e3e;
+    --green: #31a24c;
+    --amber: #f0a500;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 56px;
+    box-shadow: var(--shadow);
+  }
+  .topbar-logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    text-decoration: none;
+  }
+  .topbar-logo span { color: var(--text); }
+  .topbar-nav { display: flex; gap: 4px; }
+  .topbar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .topbar-nav a:hover { background: var(--bg); color: var(--text); }
+  .topbar-nav a.active { color: var(--accent); border-bottom: 3px solid var(--accent); border-radius: 0; }
+  .topbar-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .topbar-btn:hover { opacity: 0.88; }
+
+  /* ── LAYOUT ── */
+  .feed-layout {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── FEED CENTER ── */
+  .feed-center { display: flex; flex-direction: column; gap: 4px; }
+
+  /* Filter bar */
+  .filter-bar {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+  }
+  .filter-bar-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    align-self: center;
+    margin-right: 4px;
+  }
+  .feed-tag {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .feed-tag:hover { border-color: var(--accent); color: var(--accent); }
+  .feed-tag.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Loading */
+  .loading-state {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    box-shadow: var(--shadow);
+  }
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── POST CARD ── */
+  .post-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+    margin-bottom: 16px;
+  }
+  .post-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+  /* Post header */
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 12px;
+  }
+  .post-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fa3e3e, #ff8c00);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(250,62,62,0.25);
+  }
+  .post-meta { flex: 1; min-width: 0; }
+  .post-author { font-size: 15px; font-weight: 700; }
+  .post-sub { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .post-sub-dot { color: var(--border); }
+  .post-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .ps-perdido   { background: #fdeaea; color: var(--red); }
+  .ps-encontrado { background: #e6f4ea; color: var(--green); }
+
+  /* ── IMAGE MOSAIC ── (best visual spot: right below header, hero of the post) */
+  .post-mosaic {
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    line-height: 0; /* remove inline gap */
+  }
+
+  /* Mosaic variants via class */
+  .mosaic-0 { /* no images – big emoji placeholder */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    font-size: 90px;
+    background: linear-gradient(135deg, #f5f5f5, #ececec);
+  }
+  .mosaic-1 img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    display: block;
+  }
+  .mosaic-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    height: 300px;
+  }
+  .mosaic-2 img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .mosaic-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    height: 320px;
+  }
+  .mosaic-3 img:first-child {
+    grid-row: 1 / 3;
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .mosaic-3 img:not(:first-child) { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .mosaic-4plus {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    height: 320px;
+  }
+  .mosaic-4plus img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mosaic-more {
+    position: relative;
+    overflow: hidden;
+  }
+  .mosaic-more img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mosaic-more-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.52);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  /* ── POST BODY ── */
+  .post-body { padding: 14px 16px 12px; }
+  .post-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; line-height: 1.35; }
+  .post-desc  { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+
+  .post-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .post-tag  {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* Info grid */
+  .post-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 14px 16px;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .post-info-item { display: flex; flex-direction: column; gap: 2px; }
+  .post-info-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .post-info-value { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* Reward */
+  .post-reward {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fffbea;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 0 16px 14px;
+  }
+  .post-reward-icon { font-size: 20px; }
+  .post-reward-label { font-size: 12px; color: #92400e; font-weight: 500; }
+  .post-reward-value { font-size: 18px; font-weight: 800; color: #b45309; margin-left: auto; }
+
+  /* Contact bar */
+  .post-contact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: #f7f9fc;
+  }
+  .post-contact-info { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .post-contact-info strong { color: var(--text); }
+  .btn-whatsapp {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-whatsapp:hover { opacity: 0.88; }
+
+  /* Post actions */
+  .post-actions {
+    display: flex;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .post-action {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .post-action:hover { background: var(--bg); color: var(--text); }
+  .post-action.liked  { color: var(--red); }
+  .post-action.shared { color: var(--green); }
+
+  /* ── ANONYMOUS CHAT ── */
+  .post-chat {
+    padding: 14px 16px 16px;
+  }
+  .chat-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .chat-msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: fadeSlide 0.25s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .chat-msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .chat-msg-bubble {
+    background: var(--bg);
+    border-radius: 0 10px 10px 10px;
+    padding: 8px 12px;
+    max-width: calc(100% - 44px);
+    border: 1px solid var(--border);
+  }
+  .chat-msg-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .chat-msg-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .chat-msg-time {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .chat-empty {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    padding: 16px 0 8px;
+    font-style: italic;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .chat-anon-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #42a5f5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: var(--accent); background: white; }
+  .chat-input::placeholder { color: var(--muted); }
+  .chat-send-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .chat-send-btn:hover { opacity: 0.88; transform: scale(1.05); }
+
+  /* ── SIDEBAR ── */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 72px; }
+  .sidebar-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .sidebar-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-item { text-align: center; }
+  .stat-n { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-l { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .alert-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .alert-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .alert-emoji { font-size: 24px; flex-shrink: 0; }
+  .alert-info { flex: 1; min-width: 0; }
+  .alert-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert-loc  { font-size: 12px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+    color: white;
+    background: var(--red);
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1c1e21;
+    color: white;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    transform: translateY(70px);
+    opacity: 0;
+    transition: transform 0.25s, opacity 0.25s;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .feed-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+  @media (max-width: 600px) {
+    .topbar-nav { display: none; }
+    .post-info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="index.html" class="topbar-logo">Pet<span>Match</span></a>
+  <nav class="topbar-nav">
+    <a href="index.html">🏠 Início</a>
+    <a href="feed.html" class="active">📰 Feed Social</a>
+    <a href="cadastro.html">➕ Cadastrar</a>
+  </nav>
+  <a href="cadastro.html" class="topbar-btn">+ Publicar pet perdido</a>
+</div>
+
+<!-- LAYOUT -->
+<div class="feed-layout">
+
+  <!-- FEED CENTRAL -->
+  <main class="feed-center">
+
+    <!-- Filtro rápido -->
+    <div class="filter-bar">
+      <span class="filter-bar-label">Filtrar:</span>
+      <button class="feed-tag active" onclick="quickFilter('todos', this)">🐾 Todos</button>
+      <button class="feed-tag" onclick="quickFilter('Cachorro', this)">🐕 Cachorros</button>
+      <button class="feed-tag" onclick="quickFilter('Gato', this)">🐈 Gatos</button>
+      <button class="feed-tag" onclick="quickFilter('Outro', this)">🐦 Outros</button>
+    </div>
+
+    <!-- Posts container -->
+    <div id="posts-container">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        Carregando posts...
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SIDEBAR DIREITA -->
+  <aside class="sidebar">
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">📊 Estatísticas</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-n" id="stat-perdidos">—</div>
+          <div class="stat-l">Perdidos</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-n" id="stat-total">—</div>
+          <div class="stat-l">Total</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-n" id="stat-encontrados">—</div>
+          <div class="stat-l">Encontrados</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-n" id="stat-recompensa">R$—</div>
+          <div class="stat-l">Em recompensas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">🚨 Alertas recentes</div>
+      <div id="sidebar-recent">
+        <div style="font-size:13px;color:var(--muted);">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">ℹ️ Sobre o projeto</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.65;">
+        PetMatch é uma plataforma de recompensas para encontrar pets perdidos, desenvolvida como Projeto Integrador alinhado à <strong style="color:var(--text);">ODS 9</strong> da ONU.
+      </p>
+      <p style="font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5;">
+        UNISAL Lorena · Engenharia da Computação
+      </p>
+    </div>
+
+    <div class="sidebar-card" style="font-size:13px; color:var(--muted); line-height:2;">
+      <div class="sidebar-title">👥 Autores</div>
+      Kaio Endryll · Gabriel Felipe · Victor Alexandre · Talles Henrique · Kaue de Moura
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="fb-toast">
+  <span>ℹ️</span>
+  <span id="fb-toast-text"></span>
+</div>
+
+<script type="module">
+  import { petsCollection } from './firebase.js';
+  import { getDocs } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js';
+
+  // ── Anonymous name generator ──────────────────────────────────────
+  const ANON_ANIMALS = ['🐶','🐱','🦊','🐻','🐼','🐨','🦁','🐯','🐸','🐺','🦝','🐮'];
+  const ANON_ADJECTIVES = ['Anônimo', 'Visitante', 'Colaborador', 'Amigo', 'Vizinho', 'Tutor'];
+
+  function getOrCreateSession() {
+    let s = localStorage.getItem('pm_session');
+    if (!s) {
+      const emoji = ANON_ANIMALS[Math.floor(Math.random() * ANON_ANIMALS.length)];
+      const adj   = ANON_ADJECTIVES[Math.floor(Math.random() * ANON_ADJECTIVES.length)];
+      const num   = Math.floor(Math.random() * 900) + 100;
+      s = JSON.stringify({ emoji, name: `${adj} ${num}` });
+      localStorage.setItem('pm_session', s);
+    }
+    return JSON.parse(s);
+  }
+  const ME = getOrCreateSession();
+
+  // ── Chat helpers ───────────────────────────────────────────────────
+  function chatKey(petId) { return `pm_chat_${petId}`; }
+
+  function loadMessages(petId) {
+    try { return JSON.parse(localStorage.getItem(chatKey(petId)) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveMessages(petId, msgs) {
+    localStorage.setItem(chatKey(petId), JSON.stringify(msgs));
+  }
+
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderMessages(petId) {
+    const msgs = loadMessages(petId);
+    const container = document.getElementById(`chat-msgs-${petId}`);
+    if (!container) return;
+    if (msgs.length === 0) {
+      container.innerHTML = `<div class="chat-empty">Nenhuma mensagem ainda. Seja o primeiro a ajudar! 🐾</div>`;
+      return;
+    }
+    container.innerHTML = msgs.map(m => `
+      <div class="chat-msg">
+        <div class="chat-msg-avatar">${m.emoji}</div>
+        <div class="chat-msg-bubble">
+          <div class="chat-msg-name">${m.name}</div>
+          <div class="chat-msg-text">${escapeHtml(m.text)}</div>
+          <div class="chat-msg-time">${formatTime(m.ts)}</div>
+        </div>
+      </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  window.sendMessage = function(petId) {
+    const input = document.getElementById(`chat-input-${petId}`);
+    const text  = input.value.trim();
+    if (!text) return;
+    const msgs = loadMessages(petId);
+    msgs.push({ emoji: ME.emoji, name: ME.name, text, ts: Date.now() });
+    saveMessages(petId, msgs);
+    input.value = '';
+    renderMessages(petId);
+    toast('💬 Mensagem enviada!');
+  };
+
+  window.handleChatKey = function(event, petId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage(petId);
+    }
+  };
+
+  // ── Image Mosaic builder ───────────────────────────────────────────
+  function buildMosaic(imageUrls, emoji) {
+    const imgs = (imageUrls || []).filter(Boolean);
+    const n = imgs.length;
+
+    if (n === 0) {
+      return `<div class="post-mosaic mosaic-0">${emoji}</div>`;
+    }
+    if (n === 1) {
+      return `<div class="post-mosaic mosaic-1">
+        <img src="${imgs[0]}" alt="Foto do pet" loading="lazy">
+      </div>`;
+    }
+    if (n === 2) {
+      return `<div class="post-mosaic mosaic-2">
+        <img src="${imgs[0]}" alt="Foto 1" loading="lazy">
+        <img src="${imgs[1]}" alt="Foto 2" loading="lazy">
+      </div>`;
+    }
+    if (n === 3) {
+      return `<div class="post-mosaic mosaic-3">
+        <img src="${imgs[0]}" alt="Foto 1" loading="lazy">
+        <img src="${imgs[1]}" alt="Foto 2" loading="lazy">
+        <img src="${imgs[2]}" alt="Foto 3" loading="lazy">
+      </div>`;
+    }
+    // 4+
+    const extra = n - 4;
+    return `<div class="post-mosaic mosaic-4plus">
+      <img src="${imgs[0]}" alt="Foto 1" loading="lazy">
+      <img src="${imgs[1]}" alt="Foto 2" loading="lazy">
+      <img src="${imgs[2]}" alt="Foto 3" loading="lazy">
+      <div class="${extra > 0 ? 'mosaic-more' : ''}">
+        <img src="${imgs[3]}" alt="Foto 4" loading="lazy">
+        ${extra > 0 ? `<div class="mosaic-more-overlay">+${extra}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // ── Post builder ───────────────────────────────────────────────────
+  function timeAgo(dateStr) {
+    const d    = new Date(dateStr);
+    const now  = new Date();
+    const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return 'Hoje';
+    if (diff === 1) return 'Ontem';
+    return `${diff} dias atrás`;
+  }
+
+  function formatReward(v) {
+    return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
+  }
+
+  function buildPost(p) {
+    const waCleaned = (p.telefone || '').replace(/\D/g, '');
+    const waMsg = encodeURIComponent(`Olá! Vi o seu pet ${p.nome} no PetMatch e quero ajudar! 🐾`);
+
+    return `
+      <div class="post-card" id="post-${p.id}">
+
+        <!-- Header -->
+        <div class="post-header">
+          <div class="post-avatar">${p.emoji || '🐾'}</div>
+          <div class="post-meta">
+            <div class="post-author">${p.nome} · ${p.raca || 'Raça não informada'}</div>
+            <div class="post-sub">
+              <span>${p.especie || ''}</span>
+              <span class="post-sub-dot">·</span>
+              <span>📅 ${timeAgo(p.ultimaData)}</span>
+              <span class="post-sub-dot">·</span>
+              <span>📍 ${p.ultimaLocalizacao || ''}</span>
+            </div>
+          </div>
+          <span class="post-status ps-perdido">🔴 Perdido</span>
+        </div>
+
+        <!-- MOSAIC (hero image) -->
+        ${buildMosaic(p.imageUrls, p.emoji || '🐾')}
+
+        <!-- Body text -->
+        <div class="post-body">
+          <div class="post-title">${p.nome} está desaparecido(a) — você pode ajudar!</div>
+          <div class="post-desc">${p.detalhes || 'Sem descrição adicional.'}</div>
+          ${p.caracteristicas ? `<div class="post-desc" style="margin-top:-4px;">🔎 <em>${p.caracteristicas}</em></div>` : ''}
+          <div class="post-tags" style="margin-top:10px;">
+            <span class="post-tag">🐾 ${p.especie}</span>
+            <span class="post-tag">${p.raca || 'SRD'}</span>
+            <span class="post-tag">📅 ${p.ultimaData || ''}</span>
+          </div>
+        </div>
+
+        <!-- Info grid -->
+        <div class="post-info-grid">
+          <div class="post-info-item">
+            <span class="post-info-label">Última localização</span>
+            <span class="post-info-value">📍 ${p.ultimaLocalizacao || '—'}</span>
+          </div>
+          <div class="post-info-item">
+            <span class="post-info-label">Desapareceu em</span>
+            <span class="post-info-value">📅 ${p.ultimaData || '—'}</span>
+          </div>
+          <div class="post-info-item">
+            <span class="post-info-label">Espécie</span>
+            <span class="post-info-value">${p.especie || '—'}</span>
+          </div>
+          <div class="post-info-item">
+            <span class="post-info-label">Raça</span>
+            <span class="post-info-value">${p.raca || '—'}</span>
+          </div>
+        </div>
+
+        <!-- Reward -->
+        <div class="post-reward">
+          <span class="post-reward-icon">💰</span>
+          <span class="post-reward-label">Recompensa oferecida</span>
+          <span class="post-reward-value">${formatReward(p.recompensa)}</span>
+        </div>
+
+        <!-- Contact bar -->
+        <div class="post-contact">
+          <div class="post-contact-info">📞 Contato: <strong>${p.telefone || '—'}</strong></div>
+          <a class="btn-whatsapp" href="https://wa.me/55${waCleaned}?text=${waMsg}" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.083.532 4.043 1.464 5.754L0 24l6.395-1.679A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.006-1.372l-.359-.213-3.728.978.995-3.642-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
+            WhatsApp
+          </a>
+        </div>
+
+        <!-- Like / Share actions -->
+        <div class="post-actions">
+          <button class="post-action" id="like-btn-${p.id}" onclick="toggleLike('${p.id}')">
+            🤍 Curtir
+          </button>
+          <button class="post-action" onclick="toggleShare('${p.id}')">
+            🔁 Compartilhar
+          </button>
+        </div>
+
+        <!-- Anonymous chat -->
+        <div class="post-chat">
+          <div class="chat-label">💬 Chat anônimo</div>
+          <div class="chat-messages" id="chat-msgs-${p.id}"></div>
+          <div class="chat-input-row">
+            <div class="chat-anon-avatar">${ME.emoji}</div>
+            <input
+              class="chat-input"
+              id="chat-input-${p.id}"
+              type="text"
+              placeholder="Escreva uma mensagem anônima..."
+              maxlength="300"
+              onkeydown="handleChatKey(event, '${p.id}')"
+            >
+            <button class="chat-send-btn" onclick="sendMessage('${p.id}')">➤</button>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  // ── Render & filter ────────────────────────────────────────────────
+  let allPets = [];
+  let activeFilter = 'todos';
+  const likedPosts   = new Set(JSON.parse(localStorage.getItem('pm_likes')  || '[]'));
+  const sharedPosts  = new Set(JSON.parse(localStorage.getItem('pm_shares') || '[]'));
+
+  function renderPosts(arr) {
+    const container = document.getElementById('posts-container');
+    // Only show "perdido"
+    const perdidos = arr.filter(p => p.status !== 'encontrado');
+    if (perdidos.length === 0) {
+      container.innerHTML = `<div class="loading-state">🐾 Nenhum pet perdido neste filtro.</div>`;
+      return;
+    }
+    container.innerHTML = perdidos.map(buildPost).join('');
+    // Render chats and apply liked states
+    perdidos.forEach(p => {
+      renderMessages(p.id);
+      if (likedPosts.has(p.id)) {
+        const btn = document.getElementById(`like-btn-${p.id}`);
+        if (btn) { btn.classList.add('liked'); btn.textContent = '❤️ Curtido'; }
+      }
+    });
+  }
+
+  window.quickFilter = function(tipo, el) {
+    document.querySelectorAll('.feed-tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = tipo;
+    const filtered = tipo === 'todos' ? allPets : allPets.filter(p => p.especie === tipo);
+    renderPosts(filtered);
+  };
+
+  window.toggleLike = function(id) {
+    const btn = document.getElementById(`like-btn-${id}`);
+    if (likedPosts.has(id)) {
+      likedPosts.delete(id);
+      btn.classList.remove('liked');
+      btn.textContent = '🤍 Curtir';
+    } else {
+      likedPosts.add(id);
+      btn.classList.add('liked');
+      btn.textContent = '❤️ Curtido';
+      toast('❤️ Curtido! Ajude compartilhando também.');
+    }
+    localStorage.setItem('pm_likes', JSON.stringify([...likedPosts]));
+  };
+
+  window.toggleShare = function(id) {
+    if (sharedPosts.has(id)) { toast('Já compartilhado!'); return; }
+    sharedPosts.add(id);
+    localStorage.setItem('pm_shares', JSON.stringify([...sharedPosts]));
+    const url = window.location.href + '#post-' + id;
+    if (navigator.share) {
+      navigator.share({ title: 'PetMatch — Pet perdido!', url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url).then(() => toast('🔗 Link copiado!')).catch(() => toast('🔁 Compartilhado!'));
+    }
+  };
+
+  // ── Sidebar helpers ────────────────────────────────────────────────
+  function updateSidebar(pets) {
+    const perdidos    = pets.filter(p => p.status !== 'encontrado');
+    const encontrados = pets.filter(p => p.status === 'encontrado');
+    const totalRecomp = perdidos.reduce((s, p) => s + parseFloat(p.recompensa || 0), 0);
+
+    document.getElementById('stat-perdidos').textContent    = perdidos.length;
+    document.getElementById('stat-total').textContent       = pets.length;
+    document.getElementById('stat-encontrados').textContent = encontrados.length;
+    document.getElementById('stat-recompensa').textContent  = 'R$' + (totalRecomp >= 1000
+      ? (totalRecomp/1000).toFixed(1) + 'k'
+      : totalRecomp.toFixed(0));
+
+    const recent = perdidos.slice(0, 5);
+    document.getElementById('sidebar-recent').innerHTML = recent.length
+      ? recent.map(p => `
+          <div class="alert-item">
+            <div class="alert-emoji">${p.emoji || '🐾'}</div>
+            <div class="alert-info">
+              <div class="alert-name">${p.nome}</div>
+              <div class="alert-loc">${p.ultimaLocalizacao || ''}</div>
+            </div>
+            <span class="alert-badge">PERDIDO</span>
+          </div>
+        `).join('')
+      : `<div style="font-size:13px;color:var(--muted);">Nenhum alerta.</div>`;
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────────
+  let toastT;
+  window.toast = function(msg) {
+    const el = document.getElementById('fb-toast');
+    document.getElementById('fb-toast-text').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => el.classList.remove('show'), 3000);
+  };
+
+  // ── Load from Firebase ─────────────────────────────────────────────
+  async function loadPets() {
+    try {
+      const snap = await getDocs(petsCollection);
+      allPets = snap.docs.map(doc => {
+        const d = doc.data();
+        if (!d.emoji) {
+          d.emoji = d.especie === 'Cachorro' ? '🐕' : d.especie === 'Gato' ? '🐈' : '🐦';
+        }
+        return { id: doc.id, ...d };
+      });
+      renderPosts(allPets);
+      updateSidebar(allPets);
+    } catch (err) {
+      console.error('Erro Firebase:', err);
+      document.getElementById('posts-container').innerHTML =
+        `<div class="loading-state">⚠️ Erro ao carregar posts. Verifique sua conexão.</div>`;
+    }
+  }
+
+  loadPets();
+</script>
+
+</body>
+</html>

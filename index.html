@@ -5,23 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PetMatch — Encontre, Recompense, Conecte</title>
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="style.css">
-<script src="firebase.js" type="module"></script>
-<script src="script.js" type="module"></script>
+
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <div class="logo">PetMatch
-  </span></div>
+  <div class="logo">PetMatch</div>
   <ul>
+    <li><a href="feed.html" class="nav-feed">📰 Feed Social</a></li>
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#pets">Pets perdidos</a></li>
-    <li><a href="#cadastro">Cadastrar</a></li>
+    <li><a href="cadastro.html">Cadastrar</a></li>
     <li><a href="#ods">ODS 9</a></li>
-    <!-- <li><a href="#" class="nav-cta" onclick="openModal('login')">Entrar</a></li> !-->
   </ul>
 </nav>
 
@@ -29,7 +28,6 @@
 <section class="hero">
   <div class="hero-glow"></div>
   <div class="hero-glow-2"></div>
-
   <div class="hero-content">
     <div class="badge">
       <span class="badge-dot"></span>
@@ -38,7 +36,7 @@
     <h1>Seu pet<br>perdido,<br><em>encontrado.</em></h1>
     <p>Conectamos tutores a pessoas que ajudam a localizar animais perdidos, com recompensas financeiras seguras e transparentes.</p>
     <div class="hero-actions">
-      <a href="#cadastro" class="btn-primary">Cadastrar pet perdido</a>
+      <a href="cadastro.html" class="btn-primary">Cadastrar pet perdido</a>
       <a href="#pets" class="btn-outline">Ver animais perdidos</a>
     </div>
   </div>
@@ -50,7 +48,6 @@
     <div class="section-tag">Processo</div>
     <h2>Como funciona</h2>
     <p class="section-sub">Simples, seguro e direto. Da publicação até o reencontro em poucos passos.</p>
-
     <div class="steps">
       <div class="step">
         <div class="step-num">01</div>
@@ -68,22 +65,16 @@
         <div class="step-num">03</div>
         <div class="step-icon">✅</div>
         <h3>Tutor confirma</h3>
-        <p>Após o reencontro, o tutor confirma e a plataforma adiciona o status de "Encontrado" à publicação</p>
+        <p>Após o reencontro, o tutor confirma e a plataforma adiciona o status de "Encontrado" à publicação.</p>
       </div>
-      <!-- <div class="step">
-        <div class="step-num">04</div>
-        <div class="step-icon">💳</div>
-        <h3>Pagamento seguro</h3>
-        <p>A recompensa fica em custódia durante todo o processo. Somente após confirmação é transferida ao localizador.</p>
-      </div> !-->
     </div>
   </div>
 </section>
 
-<!-- PETS FEED -->
+<!-- PETS FEED — CARROSSEL INFINITO -->
 <section id="pets">
-  <div style="max-width:1200px; margin:0 auto;">
-    <div class="feed-header">
+  <div style="max-width:100%; margin:0 auto;">
+    <div class="feed-header" style="max-width:1200px; margin:0 auto 0;">
       <div>
         <div class="section-tag">Feed</div>
         <h2>Pets perdidos</h2>
@@ -93,107 +84,25 @@
         <button class="tab" onclick="filterPets('Cachorro', this)">Cachorros</button>
         <button class="tab" onclick="filterPets('Gato', this)">Gatos</button>
         <button class="tab" onclick="filterPets('Outro', this)">Outros</button>
-        <button class="tab" onclick="filterPets('encontrado', this)">Perdidos</button>
+        <button class="tab" onclick="filterPets('perdido', this)">Só perdidos</button>
       </div>
     </div>
 
-    <div class="pets-grid" id="pets-grid">
-      <!-- gerado por código -->
+    <!-- Carrossel -->
+    <div class="carousel-outer" id="carousel-outer">
+      <div class="carousel-track" id="pets-grid">
+        <!-- gerado por script.js -->
+      </div>
     </div>
   </div>
 </section>
 
-<!-- CADASTRO -->
-<section id="cadastro">
-  <div style="max-width:1000px; margin:0 auto;">
-    <div class="section-tag">Cadastro</div>
-    <h2>Registrar pet perdido</h2>
-    <p class="section-sub">Preencha as informações abaixo para publicar no feed e acionar a comunidade.</p>
-
-    <form class="form-grid" onsubmit="cadastrar(event)"> <!-- 'Pet cadastrado! Você receberá notificações quando houver novidades.' -->
-      <div class="form-card">
-        <h3>🐾 Informações do pet</h3>
-
-        <div class="form-group">
-          <label>Nome do animal</label>
-          <input type="text" id="nomeForm" placeholder="Ex: Thor, Mel, Bolinha..." required max="25">
-        </div>
-
-        <div class="form-group">
-          <label>Espécie</label>
-          <select id="especieForm" required>
-            <option value="">Selecione</option>
-            <option>Cachorro</option>
-            <option>Gato</option>
-            <option>Outro</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Raça</label>
-          <input type="text" id="racaForm" placeholder="Ex: Labrador, SRD..." required maxlength="20">
-        </div>
-
-        <div class="form-group">
-          <label>Cor / características</label>
-          <textarea id="caracteristicasForm" placeholder="Descreva cor, porte, marcas especiais, coleira..." maxlength="300"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Foto do pet</label>
-          <input type="file" id="petImageForm" accept="image/*" style="display: none;" onchange="handleImageSelection(event)">
-          <div class="upload-area" onclick="document.getElementById('petImageForm').click()">
-            <div class="upload-icon">📷</div>
-            <div class="upload-text" id="uploadAreaText">Clique para enviar uma foto</div>
-        </div>
-      </div>
-
-      <div class="form-card">
-        <h3>📍 Local e recompensa</h3>
-
-        <div class="form-group">
-          <label>Última localização vista</label>
-          <input type="text" id="ultimaLocalizacaoForm" placeholder="Rua, referência ou CEP" required maxlength="50">
-        </div>
-
-        <div class="form-group">
-          <label>Data em que desapareceu</label>
-          <input type="date" id="ultimaDataForm" required>
-        </div>
-
-        <div class="form-group">
-          <label>Detalhes</label>
-          <textarea id="detalhesForm" placeholder="Horário, direção que seguiu, se estava assustado..." required maxlength="160"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Valor da recompensa</label>
-          <div class="reward-input">
-            <div class="reward-prefix">R$</div>
-            <input type="number" id="recompensaForm" placeholder="0,00" min="0" required maxlength="9999">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Seu contato (WhatsApp)</label>
-          <input type="tel" id="telefoneForm" placeholder="(12) 9 0000-0000" required maxlength="17">
-        </div>
-
-        <button class="btn-primary" style="width:100%; margin-top:8px;" type="submit"> 
-          Publicar no feed
-        </button>
-      </div>
-    </form>
-  </div>
-</section>
-
-<!-- INFORMAÇÃO SOBRE ODS 9 -->
+<!-- ODS 9 -->
 <section id="ods">
   <div style="max-width:1000px; margin:0 auto;">
     <div class="section-tag">Impacto</div>
     <h2>Alinhamento com ODS 9</h2>
-    <p class="section-sub">A PetReward aplica os pilares da ODS 9 da ONU para resolver um problema real com tecnologia e inovação.</p>
-
+    <p class="section-sub">A PetMatch aplica os pilares da ODS 9 da ONU para resolver um problema real com tecnologia e inovação.</p>
     <div class="ods-grid">
       <div>
         <div class="ods-card">
@@ -202,14 +111,13 @@
         </div>
         <div class="ods-card">
           <h4>Industrialização e inovação</h4>
-          <p>Uso de tecnologia de custódia de pagamento, geolocalização e alertas em tempo real para criar um mercado de busca de pets antes inexistente.</p>
+          <p>Uso de tecnologia de geolocalização e alertas em tempo real para criar um mercado de busca de pets antes inexistente.</p>
         </div>
         <div class="ods-card">
           <h4>Geração de renda sustentável</h4>
           <p>Cria uma fonte de renda adicional para a comunidade, incentivando o trabalho colaborativo e a economia solidária através das recompensas.</p>
         </div>
       </div>
-
       <div class="ods-badge">
         <div class="ods-number">ODS<br>9</div>
         <div class="ods-title">Indústria, inovação<br>e infraestrutura</div>
@@ -227,14 +135,18 @@
   <div class="footer-logo">PetMatch</div>
   <div class="footer-text">Projeto Integrador · Engenharia da Computação · UNISAL Lorena</div>
   <div class="footer-ods">Alinhado à ODS 9 · ONU Agenda 2030</div>
+
+  <div class="footer-authors">
+    <strong>Autores:</strong>
+    Kaio Endryll &nbsp;·&nbsp; Gabriel Felipe &nbsp;·&nbsp; Victor Alexandre &nbsp;·&nbsp; Talles Henrique &nbsp;·&nbsp; Kaue de Moura
+  </div>
 </footer>
 
 <!-- MODAL LOGIN -->
-<div class="modal-overlay" id="modal-login" onclick="closeModal('login')">
+<!-- > <div class="modal-overlay" id="modal-login" onclick="closeModal('login')">
   <div class="modal" onclick="event.stopPropagation()">
     <h3>Bem-vindo de volta</h3>
     <p class="modal-sub">Entre na sua conta para gerenciar seus pets e recompensas.</p>
-
     <div class="form-group">
       <label>E-mail</label>
       <input type="email" placeholder="seu@email.com">
@@ -243,13 +155,12 @@
       <label>Senha</label>
       <input type="password" placeholder="••••••••">
     </div>
-
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('login')">Cancelar</button>
       <button class="btn-primary-full" onclick="closeModal('login'); showToast('Login realizado com sucesso!')">Entrar</button>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- TOAST -->
 <div class="toast" id="toast">
@@ -257,5 +168,10 @@
   <span class="toast-text" id="toast-text">Ação realizada!</span>
 </div>
 
+<!-- LEAFLET JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="firebase.js" type="module"></script>
+<script src="script.js" type="module"></script>
 </body>
 </html>
