@@ -1,42 +1,33 @@
-  import { petsCollection } from './firebase.js';
-  import { getDocs } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js';
+  import { petsCollection, chatCollection } from './firebase.js';
+  import { getDocs, addDoc, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js';
 
   // ── Anonymous name generator ──────────────────────────────────────
   const ANON_ANIMALS = ['🐶','🐱','🦊','🐻','🐼','🐨','🦁','🐯','🐸','🐺','🦝','🐮'];
-  const ANON_ADJECTIVES = ['Anônimo', 'Visitante', 'Colaborador', 'Amigo', 'Vizinho', 'Tutor'];
 
-  function getOrCreateSession() {
+  function createSession() {
     let s = localStorage.getItem('pm_session');
     if (!s) {
       const emoji = ANON_ANIMALS[Math.floor(Math.random() * ANON_ANIMALS.length)];
-      const adj   = ANON_ADJECTIVES[Math.floor(Math.random() * ANON_ADJECTIVES.length)];
       const num   = Math.floor(Math.random() * 900) + 100;
-      s = JSON.stringify({ emoji, name: `${adj} ${num}` });
-      localStorage.setItem('pm_session', s);
+      s = JSON.stringify({ emoji, name: `Colaborador ${num}` });
+      localStorage.setItem('pm_session', s); // persist so same name is reused next visit
     }
     return JSON.parse(s);
   }
-  const ME = getOrCreateSession();
+  const ME = createSession();
 
   // ── Chat helpers ───────────────────────────────────────────────────
-  function chatKey(petId) { return `pm_chat_${petId}`; }
 
-  function loadMessages(petId) {
-    try { return JSON.parse(localStorage.getItem(chatKey(petId)) || '[]'); }
-    catch { return []; }
-  }
-
-  function saveMessages(petId, msgs) {
-    localStorage.setItem(chatKey(petId), JSON.stringify(msgs));
-  }
+  // Stores the Firestore unsubscribe functions so we don't create duplicate listeners
+  const chatListeners = {};
 
   function formatTime(ts) {
     const d = new Date(ts);
     return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function renderMessages(petId) {
-    const msgs = loadMessages(petId);
+  // Renders messages directly from a data array (called by onSnapshot)
+  function renderMessages(petId, msgs) {
     const container = document.getElementById(`chat-msgs-${petId}`);
     if (!container) return;
     if (msgs.length === 0) {
@@ -56,20 +47,51 @@
     container.scrollTop = container.scrollHeight;
   }
 
+  // Starts a real-time listener for a pet's chat — auto-updates when new messages arrive
+  function listenToChat(petId) {
+    if (chatListeners[petId]) return; // already listening, don't duplicate
+
+    const q = query(
+      chatCollection,
+      where('petId', '==', petId),
+      orderBy('ts', 'asc')
+    );
+
+    chatListeners[petId] = onSnapshot(q, (snap) => {
+      const msgs = snap.docs.map(doc => doc.data());
+      renderMessages(petId, msgs);
+    });
+  }
+
   function escapeHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  window.sendMessage = function(petId) {
+  window.sendMessage = async function(petId) {
     const input = document.getElementById(`chat-input-${petId}`);
     const text  = input.value.trim();
     if (!text) return;
-    const msgs = loadMessages(petId);
-    msgs.push({ emoji: ME.emoji, name: ME.name, text, ts: Date.now() });
-    saveMessages(petId, msgs);
+
     input.value = '';
-    renderMessages(petId);
-    toast('💬 Mensagem enviada!');
+    input.disabled = true; // prevent double-sends while saving
+
+    try {
+      await addDoc(chatCollection, {
+        petId,             // which pet this message belongs to
+        emoji: ME.emoji,   // sender's anonymous emoji
+        name:  ME.name,    // sender's anonymous name e.g. "Colaborador 342"
+        text,
+        ts: Date.now()
+      });
+      toast('💬 Mensagem enviada!');
+    } catch (err) {
+      console.error('Erro ao enviar mensagem:', err);
+      toast('⚠️ Erro ao enviar. Tente novamente.');
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+    // No need to call renderMessages manually — onSnapshot fires automatically
   };
 
   window.handleChatKey = function(event, petId) {
@@ -245,7 +267,7 @@
     container.innerHTML = perdidos.map(buildPost).join('');
     // Render chats and apply liked states
     perdidos.forEach(p => {
-      renderMessages(p.id);
+      listenToChat(p.id); // start real-time Firestore listener for this pet's chat
       if (likedPosts.has(p.id)) {
         const btn = document.getElementById(`like-btn-${p.id}`);
         if (btn) { btn.classList.add('liked'); btn.textContent = '❤️ Curtido'; }
@@ -308,7 +330,7 @@
         if (!d.emoji) {
           d.emoji = d.especie === 'Cachorro' ? '🐕' : d.especie === 'Gato' ? '🐈' : '🐦';
         }
-        return { id: doc.id, ...d };
+        return { ...d, id: doc.id };
       });
       renderPosts(allPets);
       updateSidebar(allPets);

@@ -81,13 +81,33 @@ window.handleImageSelection = handleImageSelection;
 window.removePhoto = removePhoto;
 
 // ──────────────────────────────────────────────
-// FIREBASE — buscar pets
+// FOTO — Upload para ImgBB
 // ──────────────────────────────────────────────
 async function uploadImage(file) {
   if (!file) return null;
-  const storageRef = ref(storage, `pet_images/${Date.now()}_${file.name}`);
-  const snapshot = await uploadBytes(storageRef, file);
-  return await getDownloadURL(snapshot.ref);
+
+  // Convert the file to Base64 (ImgBB needs this format)
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]); // removes the "data:image/jpeg;base64," part
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  // Send to ImgBB
+  const formData = new FormData();
+  formData.append('image', base64);
+
+  const response = await fetch('https://api.imgbb.com/1/upload?key=fff4f58ce64b5aab13b34a51207ebb5e', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!result.success) throw new Error('Falha no upload da imagem');
+
+  return result.data.url;
 }
 
 async function getPetData() {
